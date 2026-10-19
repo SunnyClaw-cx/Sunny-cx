@@ -1,0 +1,351 @@
+/* ==========================================================================
+   sunny-cx 训练看板 —— 与问诊页同一套 token（宣纸 / 墨 / 朱砂）
+   秩序靠细线、对齐与留白；无渐变、无发光、无卡片堆叠。
+   ========================================================================== */
+
+:root {
+  --paper:        #f2ede1;
+  --paper-raise:  #faf7ef;
+  --ink:          #1b1a17;
+  --ink-2:        #565048;
+  --ink-3:        #8d8779;
+  --cinnabar:     #a3372b;
+  --cinnabar-mid: rgba(163, 55, 43, .16);
+  --cinnabar-wash:rgba(163, 55, 43, .07);
+
+  --rule:         rgba(27, 26, 23, .17);
+  --rule-soft:    rgba(27, 26, 23, .08);
+  --rule-hair:    rgba(27, 26, 23, .05);
+
+  --serif: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+  --sans:  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  --mono:  "Cascadia Mono", "SF Mono", "JetBrains Mono", Consolas, monospace;
+
+  --w: 1180px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg, var(--rule-hair) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(90deg, var(--rule-hair) 0 1px, transparent 1px 28px);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.sheet {
+  max-width: var(--w);
+  margin: 0 auto;
+  padding: 0 28px 44px;
+}
+
+/* ---------------------------------------------------------------- 页头 */
+.masthead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 30px 0 14px;
+  border-bottom: 1px solid var(--ink);
+}
+
+.brand { display: flex; align-items: center; gap: 13px; }
+
+.seal {
+  flex: 0 0 auto;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border: 1px solid var(--cinnabar);
+  color: var(--cinnabar);
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.brand-text h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+.brand-sub {
+  margin: 1px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.head-right { text-align: right; }
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--ink-3);
+  background: transparent;
+}
+
+.dot[data-state="training"] { border-color: var(--cinnabar); background: var(--cinnabar); }
+.dot[data-state="resting"]  { border-color: var(--cinnabar); background: transparent; }
+.dot[data-state="stopped"]  { border-color: var(--ink-3);    background: transparent; }
+.dot[data-state="unknown"]  { border-color: var(--ink-3);    background: transparent; }
+
+.head-meta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+select {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  padding: 2px 6px;
+}
+
+.updated { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- 版式 */
+.board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 326px;
+  margin-top: 24px;
+}
+
+.col-main { padding-right: 30px; border-right: 1px solid var(--rule-soft); }
+.col-side { padding-left: 30px; }
+
+.col-full {
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ink);
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.idx {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--cinnabar);
+  letter-spacing: .08em;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  color: var(--ink-2);
+}
+
+.panel-note { margin-left: auto; font-size: 12px; color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- 进度 */
+.stepnum {
+  font-family: var(--mono);
+  font-size: 52px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepnum .of {
+  margin-left: 12px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--ink-3);
+}
+
+.ruler {
+  position: relative;
+  height: 2px;
+  margin: 18px 0 7px;
+  background: var(--rule);
+}
+
+.ruler i {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0;
+  background: var(--cinnabar);
+}
+
+.ruler-foot {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- 曲线 */
+.chart-wrap { margin-top: 26px; }
+
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.chart-head h3 {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--ink-2);
+}
+
+.legend { display: flex; gap: 14px; font-size: 11.5px; color: var(--ink-3); }
+.lg { display: inline-flex; align-items: center; gap: 6px; }
+.lg-line { width: 14px; height: 1.5px; background: var(--ink); }
+.lg-faint { height: 1px; background: rgba(27, 26, 23, .28); }
+.lg-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--cinnabar); }
+
+#curve {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+#curve .grid      { stroke: var(--rule-hair); stroke-width: 1; }
+#curve .axis      { fill: var(--ink-3); font-size: 10.5px; font-family: var(--mono); }
+#curve .raw       { fill: none; stroke: rgba(27, 26, 23, .20); stroke-width: .9; }
+#curve .train     { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; }
+#curve .val       { fill: var(--cinnabar); }
+#curve .best      { stroke: var(--cinnabar-mid); stroke-width: 1; stroke-dasharray: 4 4; }
+#curve .empty-msg { fill: var(--ink-3); font-size: 12px; font-family: var(--sans); }
+
+/* ---------------------------------------------------------------- 指标 */
+.metrics {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 14px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.metrics dt {
+  padding: 8px 0;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.metrics dd {
+  margin: 0;
+  padding: 8px 0;
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.metrics dd.is-accent { color: var(--cinnabar); }
+
+.hint {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+
+/* ---------------------------------------------------------------- 验证表 */
+.vals {
+  width: 100%;
+  max-width: 780px;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.vals th {
+  padding: 7px 0;
+  text-align: right;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--ink);
+}
+
+.vals th:first-child, .vals td:first-child { text-align: left; }
+
+.vals td {
+  padding: 7px 0;
+  text-align: right;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.vals td.empty {
+  text-align: center;
+  color: var(--ink-3);
+  padding: 18px 0;
+  font-family: var(--sans);
+}
+
+.vals tr.is-best td { color: var(--cinnabar); }
+
+.foot {
+  margin: 12px 0 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+/* ---------------------------------------------------------------- 降级 */
+@media (max-width: 900px) {
+  .board { grid-template-columns: 1fr; }
+  .col-main { padding-right: 0; border-right: 0; }
+  .col-side {
+    padding-left: 0;
+    margin-top: 26px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+  }
+  .stepnum { font-size: 40px; }
+  .masthead { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .head-right { text-align: left; }
+  .status, .head-meta { justify-content: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

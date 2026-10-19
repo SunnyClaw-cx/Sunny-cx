@@ -13,6 +13,7 @@
 """
 from __future__ import annotations
 
+import re
 import sys
 import time
 from contextlib import asynccontextmanager
@@ -31,6 +32,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from sunnycx import consult as core
+from server import train_state
 
 WEB_DIR = ROOT / "web"
 API_VERSION = "0.1.0"
@@ -166,7 +168,53 @@ def check(body: CheckIn) -> dict:
     return core.check_answer(body.text, engine())
 
 
+# ---------------------------------------------------------------- 训练看板
+# 全部数据来自本机 logs/ 与 checkpoints/，不查询、不推送任何云端服务。
+RUN_RE = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
+
+
+@app.get("/api/train/runs")
+def train_runs() -> dict:
+    runs = train_state._runs()
+    latest = train_state.latest_run()
+    return {
+        "count": len(runs),
+        "latest": latest,
+        "items": [
+            {
+                "run": r,
+                "is_latest": r == latest,
+                "state": train_state.parse_run(r)["state"],
+            }
+            for r in runs
+        ],
+    }
+
+
+@app.get("/api/train/status")
+def train_status(run: str | None = None) -> JSONResponse:
+    """解析指定 run 的日志与检查点。不传 run 时取最近更新的那个。"""
+    name = run or train_state.latest_run()
+    if not name:
+        raise HTTPException(status_code=404, detail="本机没有任何训练日志")
+    if not RUN_RE.match(name):
+        raise HTTPException(status_code=422, detail="run 名只允许字母、数字、下划线、点、短横")
+    data = train_state.parse_run(name)
+    if not data["log_exists"]:
+        raise HTTPException(status_code=404, detail=f"未找到 {name} 的日志")
+    return JSONResponse(data)
+
+
 # ---------------------------------------------------------------- 静态前端
+@app.get("/live", include_in_schema=False)
+def live_page() -> FileResponse:
+    """训练看板：读本机日志的静态页，与问诊页同目录。"""
+    page = WEB_DIR / "live.html"
+    if not page.is_file():
+        raise HTTPException(status_code=404, detail="web/live.html 缺失")
+    return FileResponse(page)
+
+
 if WEB_DIR.is_dir():
     app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
 else:                                            # 纯 API 部署时的兜底

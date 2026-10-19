@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>训练看板 · sunny-cx</title>
+<meta name="description" content="直接读取本机训练日志与检查点的看板：进度、loss 曲线、验证点、显存与 ETA。">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./live.css">
+</head>
+<body>
+<div class="sheet">
+
+  <header class="masthead">
+    <div class="brand">
+      <span class="seal" aria-hidden="true">训</span>
+      <div class="brand-text">
+        <h1>训练看板</h1>
+        <p class="brand-sub">sunny-cx · 直接读本机日志，不连任何云端</p>
+      </div>
+    </div>
+
+    <div class="head-right">
+      <div class="status" role="status" aria-live="polite">
+        <span class="dot" id="dot" data-state="unknown"></span>
+        <span id="state-text">读取中</span>
+      </div>
+      <div class="head-meta">
+        <label class="sr-only" for="run">训练任务</label>
+        <select id="run"></select>
+        <span id="updated" class="updated">—</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="board">
+
+    <section class="col-main" aria-labelledby="h-progress">
+      <div class="panel-head">
+        <span class="idx">01</span>
+        <h2 id="h-progress">进度</h2>
+      </div>
+
+      <div class="step-block">
+        <div class="stepnum"><span id="step">—</span><span class="of">/ <span id="total">—</span> 步</span></div>
+        <div class="ruler" id="ruler" role="img" aria-label="训练进度">
+          <i id="ruler-fill"></i>
+        </div>
+        <div class="ruler-foot">
+          <span id="pct">—</span>
+          <span id="epoch">—</span>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-head">
+          <h3>训练 loss</h3>
+          <div class="legend">
+            <span class="lg"><i class="lg-line"></i>train · ema</span>
+            <span class="lg"><i class="lg-line lg-faint"></i>原始</span>
+            <span class="lg"><i class="lg-dot"></i>val</span>
+          </div>
+        </div>
+        <svg id="curve" viewBox="0 0 720 250" preserveAspectRatio="none" role="img"
+             aria-label="训练与验证 loss 曲线"></svg>
+      </div>
+    </section>
+
+    <section class="col-side" aria-labelledby="h-metrics">
+      <div class="panel-head">
+        <span class="idx">02</span>
+        <h2 id="h-metrics">指标</h2>
+      </div>
+
+      <dl class="metrics">
+        <dt>loss</dt><dd id="m-loss">—</dd>
+        <dt>lr</dt><dd id="m-lr">—</dd>
+        <dt>grad norm</dt><dd id="m-gnorm">—</dd>
+        <dt>峰值显存</dt><dd id="m-vram">—</dd>
+        <dt>best val</dt><dd id="m-best">—</dd>
+        <dt>已训练</dt><dd id="m-elapsed">—</dd>
+        <dt>单步耗时</dt><dd id="m-sps">—</dd>
+        <dt>预计剩余</dt><dd id="m-eta">—</dd>
+        <dt>已休息</dt><dd id="m-rest">—</dd>
+      </dl>
+
+      <p class="hint" id="hint">—</p>
+    </section>
+
+  </main>
+
+  <section class="col-full" aria-labelledby="h-vals">
+    <div class="panel-head">
+      <span class="idx">03</span>
+      <h2 id="h-vals">验证点</h2>
+      <span class="panel-note" id="val-note"></span>
+    </div>
+    <table class="vals">
+      <thead>
+        <tr><th>step</th><th>train</th><th>val</th><th>gap</th><th>best</th></tr>
+      </thead>
+      <tbody id="val-body">
+        <tr><td colspan="5" class="empty">暂无验证记录</td></tr>
+      </tbody>
+    </table>
+    <p class="foot" id="foot">—</p>
+  </section>
+
+</div>
+<script src="./live.js"></script>
+</body>
+</html>

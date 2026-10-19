@@ -191,6 +191,30 @@ python -m unittest discover -s tests -v  # API 契约 9 条
 > 副行的**覆盖 %** 是该证型自身要素的命中比例。单要素证型命中一词即满覆盖，
 > 所以排序看前者——两者不是同一指标，UI 里已标注。
 
+## 训练看板（本地实时）
+
+![训练看板](docs/assets/live-board.png)
+
+`/live` 直接读本机 `logs/*.log` 与 `checkpoints/*.json`，
+**不查询、不推送任何云端服务**；训练进程停了也能看到最后一次落盘状态。
+
+```bash
+python -m uvicorn server.app:app --port 8000
+# 浏览器打开 http://127.0.0.1:8000/live
+```
+
+- 进度、loss 曲线（原始细线 + EMA 趋势线）、验证点、显存峰值、单步耗时、ETA、休息累计
+- 状态按日志新鲜度判定：`training`（5 分钟内有新行）/ `resting`（最后一条事件是休息）/ `stopped`
+- ETA 用墙钟 `elapsed` 推算，因此**天然把未来的休息时间算进去**，不是纯算力估算
+
+| 接口 | 说明 |
+|---|---|
+| `GET /api/train/runs` | 本机可用的训练任务（日志与检查点并集） |
+| `GET /api/train/status?run=` | 单任务全量状态；不传 `run` 取最近更新的那个 |
+
+> 日志名与权重名前缀往往不一致（`--save_weight sunnycx_0.5b_pretrain_v2` 配的是
+> `logs/pretrain_0.5b_v2.log`）。解析层先试同名，再按词元重合度配对，**重合不足两个词元宁可报 404，也不张冠李戴**。
+
 ## 实测成绩（GTX 1060 6GB / sm_61）
 
 | 项 | 结果 |
