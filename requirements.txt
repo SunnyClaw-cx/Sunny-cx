@@ -1,0 +1,7 @@
+# 运行问诊服务所需（CPU 即可）
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.5
+
+# 测试用（TestClient 依赖 httpx）
+httpx>=0.27

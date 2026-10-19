@@ -1,0 +1,12 @@
+{"id": "H01", "text": "老是提不起劲，走两步就喘，舌头颜色发暗，右肋下面一阵阵针扎似的疼", "expect": ["气虚血瘀证"], "expect_decision": "ok", "why": "气虚（乏力/动则喘）+ 血瘀（舌暗/刺痛）"}
+{"id": "H02", "text": "尿色很深，下身总是潮乎乎的，两条腿像灌了铅", "expect": ["湿热下注证"], "expect_decision": "ok", "why": "下焦湿热，措辞全换"}
+{"id": "H03", "text": "太阳穴一跳一跳地胀，眼睛发红，一点小事就上火，耳朵里嗡嗡的", "expect": ["肝阳上亢证"], "expect_decision": "ok", "why": "肝阳上亢，用「太阳穴胀/上火/嗡嗡」而非原词"}
+{"id": "H04", "text": "半夜老醒，手心脚心发烫，被子都汗湿了", "expect": ["阴虚火旺证"], "expect_decision": "ok", "why": "阴虚（五心热/盗汗），未提口干"}
+{"id": "H05", "text": "受了凉，鼻子不通，鼻涕是清的，浑身发紧不出汗，还咳", "expect": ["风寒袭肺证"], "expect_decision": "ok", "why": "风寒表实 + 肺系"}
+{"id": "H06", "text": "吃完饭胃里像火烧，酸水往上涌，嘴里发苦", "expect": ["肝胃郁热证"], "expect_decision": "ok", "why": "郁热（灼热/反酸/口苦）"}
+{"id": "H07", "text": "头沉得像裹了块布，嘴里黏，人胖，一动就喘还有痰", "expect": ["痰湿蕴肺证"], "expect_decision": "ok", "why": "痰湿 + 肺系；注意可能被判成痰湿中阻"}
+{"id": "H08", "text": "手指关节肿起来了，弯不了，还发麻", "expect": ["风痰瘀阻证", "痰瘀痹阻证"], "expect_decision": "differential", "why": "痹阻/血瘀/风痰三轴交织，给鉴别比单选安全"}
+{"id": "H09", "text": "腰膝发酸没劲，眼睛干，头也晕，耳朵响", "expect": ["肝肾阴虚证"], "expect_decision": "ok", "why": "肝肾 + 阴虚"}
+{"id": "H10", "text": "肚子咕噜响，一天拉两三次稀的，吃点凉的就加重，手脚凉", "expect": ["脾胃虚寒证"], "expect_decision": "ok", "why": "虚寒（便溏/遇寒加重/肢冷）"}
+{"id": "H11", "text": "这几天不太得劲", "expect": [], "expect_decision": "refuse", "why": "极端含糊，必须拒答"}
+{"id": "H12", "text": "头疼", "expect": [], "expect_decision": "refuse", "why": "单一症状无定位无性质，必须拒答"}

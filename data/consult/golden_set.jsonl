@@ -1,0 +1,18 @@
+{"id": "G01", "text": "我最近老觉得累，一动就出汗，舌头发紫，身上老是一个地方刺痛", "expect": ["气虚血瘀证"], "expect_decision": "ok", "why": "气虚（乏力/自汗）+血瘀（舌紫暗/痛有定处）"}
+{"id": "G02", "text": "小便发黄，阴囊潮湿，两条腿发沉", "expect": ["湿热下注证"], "expect_decision": "ok", "why": "下焦定位 + 湿热（尿黄/阴部潮湿/腿沉）"}
+{"id": "G03", "text": "头胀疼，脸红，脾气急，耳鸣", "expect": ["肝阳上亢证"], "expect_decision": "ok", "why": "肝阳上亢四主症"}
+{"id": "G04", "text": "晚上睡不着，手心脚心发热，夜里出汗，嘴干", "expect": ["阴虚火旺证"], "expect_decision": "ok", "why": "阴虚（五心烦热/盗汗/口干），无脏腑定位"}
+{"id": "G05", "text": "咳嗽三天了，怕冷，流清鼻涕，没出汗", "expect": ["风寒袭肺证"], "expect_decision": "ok", "why": "肺 + 风寒表证"}
+{"id": "G06", "text": "胃里老烧得慌，反酸，嘴里苦", "expect": ["肝胃郁热证"], "expect_decision": "ok", "why": "郁热（灼痛/反酸/口苦）"}
+{"id": "G07", "text": "头晕，胸口闷，老有痰，人偏胖", "expect": ["痰湿蕴肺证"], "expect_decision": "ok", "why": "肺系痰湿；注意与痰湿中阻/痰浊蒙窍鉴别"}
+{"id": "G08", "text": "关节肿痛变形，手脚发麻", "expect": ["风痰瘀阻证"], "expect_decision": "ok", "why": "风痰 + 血瘀阻络"}
+{"id": "G09", "text": "腰酸腿软，眼睛干涩，头晕耳鸣", "expect": ["肝肾阴虚证"], "expect_decision": "ok", "why": "肝肾定位 + 阴虚（目干）"}
+{"id": "G10", "text": "肚子胀，老打嗝，两边肋骨下面也胀", "expect": ["肝胃不和证"], "expect_decision": "ok", "why": "肝郁 + 胃失和降"}
+{"id": "G11", "text": "大便稀，怕冷，肚子热敷一下会舒服些", "expect": ["脾胃虚寒证"], "expect_decision": "ok", "why": "虚寒（便溏/畏寒/喜温喜按）"}
+{"id": "G12", "text": "腿肿，手脚冰凉，夜里老起夜", "expect": ["阳虚水泛证"], "expect_decision": "ok", "why": "阳虚（水肿/肢冷/夜尿）"}
+{"id": "G13", "text": "嗓子干，心里烦热，睡着就出汗", "expect": ["阴虚火旺证"], "expect_decision": "ok", "why": "纯阴虚，无定位"}
+{"id": "G14", "text": "不想吃饭，吃了就胀，大便不成形，人没力气", "expect": ["脾胃虚弱证", "脾胃虚寒证"], "expect_decision": "differential", "why": "脾胃气虚与脾胃虚寒在无寒热指征时两可 → 正确行为是给鉴别而非单选"}
+{"id": "G15", "text": "我胃不舒服", "expect": [], "expect_decision": "refuse", "why": "信息不足，必须拒答而不是硬判"}
+{"id": "G16", "text": "最近有点累", "expect": [], "expect_decision": "refuse", "why": "单一非特异症状，必须拒答"}
+{"id": "G17", "text": "心情不好，老想叹气", "expect": ["肝郁气滞证"], "expect_decision": "ok", "why": "肝郁气滞极简表现"}
+{"id": "G18", "text": "面色发黄，心慌，睡不着，没力气", "expect": ["气血亏虚证"], "expect_decision": "weak", "why": "复合证（气血两虚）单 token 模型覆盖不足，允许降级为 weak，但不许错判"}

@@ -1,0 +1,36 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+
+# ---- 训练产物：体积大，一律不进仓库 ----
+checkpoints/
+logs/
+*.pth
+*.safetensors
+*.bin
+
+# ---- 本机发布物料与临时文件 ----
+_dev/
+publish/
+_shot/
+nul
+
+# ---- 私有配置：一律不进仓库 ----
+.secrets/
+.env
+*.key
+# 训练状态推送模块属于本机私有集成，仓库不包含
+src/sunnycx/cloud.py
+
+# ---- 编辑器 ----
+.vscode/
+.idea/
+.DS_Store
+
+# 本机解释器路径（各平台自行创建，勿入库）
+scripts/python_path.txt

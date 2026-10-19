@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>白话问诊 · sunny-cx</title>
+<meta name="description" content="把身体感受说清楚，看它读懂了多少、判出了什么。受控判定引擎，宁可不答也不乱答。">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div class="sheet">
+
+  <header class="masthead">
+    <div class="brand">
+      <span class="seal" aria-hidden="true">诊</span>
+      <div class="brand-text">
+        <h1>白话问诊</h1>
+        <p class="brand-sub">sunny-cx · 受控判定引擎</p>
+      </div>
+    </div>
+    <div class="status" id="status" role="status" aria-live="polite">
+      <span class="dot" id="dot" data-state="loading"></span>
+      <span id="status-text">正在连接</span>
+    </div>
+  </header>
+
+  <main class="grid">
+
+    <section class="panel panel-input" aria-labelledby="h-input">
+      <div class="panel-head">
+        <span class="idx">01</span>
+        <h2 id="h-input">说说哪里不舒服</h2>
+      </div>
+
+      <label class="sr-only" for="input">主诉内容</label>
+      <textarea id="input" maxlength="1000" spellcheck="false"
+        placeholder="例如：我最近老觉得累，一动就出汗，舌头发紫，胸口时不时刺痛"></textarea>
+
+      <div class="input-foot">
+        <span class="counter" id="counter">0 / 1000</span>
+        <button class="btn" id="submit" type="button">开始辨证</button>
+      </div>
+
+      <div class="examples">
+        <p class="label">示例</p>
+        <div class="chips" id="examples"></div>
+      </div>
+
+      <p class="tip">用日常说法就行，不必凑医学术语。说清楚「哪里、多久、什么情况下加重」更容易判准。</p>
+    </section>
+
+    <section class="panel panel-result" aria-labelledby="h-result" aria-live="polite">
+      <div class="panel-head">
+        <span class="idx">02</span>
+        <h2 id="h-result">判定结果</h2>
+        <span class="verdict" id="verdict" hidden></span>
+      </div>
+      <div class="result-body" id="result">
+        <div class="empty">
+          <p class="empty-lead">还没有内容</p>
+          <p class="empty-sub">左侧写下主诉后，这里会给出：识别到的症状、辨证方向、<br class="br-pc">治法、参考方剂与药味，以及证据覆盖程度。</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="colophon">
+    <p id="disclaimer">本工具输出中医知识性内容，不构成诊疗建议；具体请面诊执业中医师。</p>
+    <p class="meta-line">
+      <span id="stat-line">—</span>
+      <span class="sep">·</span>
+      <span>证型 / 方剂由离线表查得，不经生成模型</span>
+    </p>
+  </footer>
+
+</div>
+<script src="./app.js"></script>
+</body>
+</html>

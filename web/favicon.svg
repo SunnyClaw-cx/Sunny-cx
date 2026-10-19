@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="sunny-cx">
+  <rect width="32" height="32" fill="#f2ede1"/>
+  <rect x="3.5" y="3.5" width="25" height="25" fill="none" stroke="#a3372b" stroke-width="1.4"/>
+  <path d="M6.5 18.5h5l2.5-5.5 3.5 9 2.5-3.5h5.5"
+        fill="none" stroke="#a3372b" stroke-width="1.6"
+        stroke-linecap="square" stroke-linejoin="miter"/>
+</svg>

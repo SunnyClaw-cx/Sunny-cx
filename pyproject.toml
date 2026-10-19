@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sunny-cx"
+version = "0.1.0"
+description = "中医垂域大模型：自研 0.5B 训练栈 + 受控白话问诊引擎"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.27",
+  "pydantic>=2.5",
+]
+
+[project.optional-dependencies]
+train = ["torch>=2.0", "numpy>=1.24"]
+dev   = ["httpx>=0.27"]
+
+[project.scripts]
+sunnycx-consult = "sunnycx.consult:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

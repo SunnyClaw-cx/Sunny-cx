@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>sunny-cx 训练编排台</title>
+<style>
+:root{
+  --ink-0:#0B0B0C;
+  --ink-1:#111113;
+  --ink-2:#161619;
+  --ink-3:#1D1D21;
+  --line:#2A2A2F;
+  --line-soft:#1F1F24;
+  --text:#E7E4DE;
+  --text-2:#A5A199;
+  --text-3:#6E6B63;
+  --amber:#D9A441;
+  --amber-d:#8A6722;
+  --danger:#B8533F;
+  --ok:#7C8F6B;
+  --mono:"JetBrains Mono","IBM Plex Mono","Cascadia Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
+  --sans:"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--ink-0);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.6;
+  padding:28px 20px 72px;
+  -webkit-font-smoothing:antialiased;
+}
+.shell{max-width:1180px;margin:0 auto}
+
+/* ---------- masthead ---------- */
+.masthead{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:20px;padding-bottom:16px;border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-mark{
+  width:38px;height:38px;flex:0 0 38px;
+  border:1px solid var(--amber-d);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:12px;letter-spacing:.06em;
+  color:var(--amber);
+}
+h1{font-size:17px;font-weight:600;letter-spacing:.02em;line-height:1.3}
+.sub{font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:.03em;margin-top:3px}
+.state{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11px;color:var(--text-2);
+  border:1px solid var(--line);padding:5px 11px;letter-spacing:.03em;
+  white-space:nowrap;
+}
+.dot{width:5px;height:5px;background:var(--danger);border-radius:50%}
+
+/* ---------- section shell ---------- */
+section{margin-top:30px}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.sec-head h2{font-size:13px;font-weight:600;letter-spacing:.10em;color:var(--text)}
+.sec-head .idx{font-family:var(--mono);font-size:10px;color:var(--text-3);letter-spacing:.08em}
+.sec-head .note{font-size:12px;color:var(--text-3);margin-left:auto;text-align:right}
+
+/* ---------- hero gauge ---------- */
+.hero{
+  display:grid;grid-template-columns:1fr 268px;gap:26px;
+  border:1px solid var(--line);background:var(--ink-1);
+  padding:22px 24px;position:relative;
+}
+.hero::before,.hero::after{
+  content:"";position:absolute;width:11px;height:11px;pointer-events:none;
+}
+.hero::before{top:-1px;left:-1px;border-top:1px solid var(--amber);border-left:1px solid var(--amber)}
+.hero::after{bottom:-1px;right:-1px;border-bottom:1px solid var(--amber);border-right:1px solid var(--amber)}
+.hero-l{display:flex;flex-direction:column}
+.gauge-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px}
+.gauge-head h3{font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--text-2)}
+.gauge-head .unit{font-family:var(--mono);font-size:10px;color:var(--text-3)}
+
+.gauge{position:relative;padding-top:14px}
+.gauge-track{
+  display:flex;height:34px;border:1px solid var(--line);
+  background:var(--ink-2);overflow:hidden;
+}
+.seg{height:100%;position:relative;transition:width .28s ease}
+.seg+.seg{border-left:1px solid #0B0B0C}
+.seg-w{background:#5A5A64}
+.seg-g{background:#45454F}
+.seg-a{background:#34343D}
+.seg-act{background:#272A34}
+.seg-free{
+  background:repeating-linear-gradient(135deg,transparent 0 5px,var(--line-soft) 5px 6px);
+  flex:1;
+}
+.limit{position:absolute;top:14px;height:34px;width:1px;background:var(--danger);opacity:.55;pointer-events:none}
+.limit span{position:absolute;top:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--mono);font-size:9px;color:var(--danger);opacity:.8;letter-spacing:.04em}
+.gauge-ticks{position:relative;height:16px;margin-top:5px}
+.tick{position:absolute;top:0;transform:translateX(-50%);text-align:center}
+.tick i{display:block;width:1px;height:4px;background:var(--line);margin:0 auto 3px}
+.tick.half i{height:2px;background:var(--line-soft)}
+.tick span{font-family:var(--mono);font-size:9px;color:var(--text-3)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:16px}
+.lg{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-2)}
+.lg i{width:9px;height:9px;flex:0 0 9px;display:block}
+.lg b{font-family:var(--mono);font-weight:500;color:var(--text);font-size:11.5px}
+.gauge-cap{
+  margin-top:auto;padding-top:14px;font-family:var(--mono);font-size:10.5px;color:var(--text-3);
+  letter-spacing:.02em;line-height:1.7;
+}
+
+.metrics{display:flex;flex-direction:column;gap:0;height:100%}
+.metric{
+  display:flex;flex-direction:column;gap:2px;
+  padding:11px 0;border-bottom:1px solid var(--line-soft);
+}
+.metric:first-child{padding-top:0}
+.metric:last-child{border-bottom:none}
+.metric .k{font-size:10.5px;color:var(--text-3);letter-spacing:.06em}
+.metric .v{font-family:var(--mono);font-size:21px;font-weight:500;letter-spacing:-.01em}
+.metric .v.accent{color:var(--amber)}
+
+/* ---------- calculator ---------- */
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.calc-pane{background:var(--ink-1);padding:20px 22px}
+.pane-title{
+  font-size:11px;letter-spacing:.09em;color:var(--text-3);
+  font-family:var(--mono);margin-bottom:16px;
+}
+.tabs{display:flex;gap:1px;margin-bottom:18px;background:var(--line);border:1px solid var(--line)}
+.tab{
+  flex:1;background:var(--ink-2);border:none;color:var(--text-2);
+  font-family:var(--sans);font-size:12px;padding:9px 6px;cursor:pointer;
+  letter-spacing:.04em;transition:color .16s,background .16s;
+}
+.tab:hover{color:var(--text)}
+.tab.on{background:var(--ink-0);color:var(--amber);box-shadow:inset 0 -1px 0 var(--amber)}
+
+.field{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:7px 0}
+.field label{font-size:12.5px;color:var(--text-2)}
+.field .hint{display:block;font-size:10.5px;color:var(--text-3);margin-top:1px}
+.field input[type=number],.field input[type=text],.field select{
+  width:118px;text-align:right;
+  background:var(--ink-0);border:1px solid var(--line);color:var(--text);
+  font-family:var(--mono);font-size:12.5px;padding:6px 9px;
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--amber-d)}
+.field select{width:170px;text-align:left;cursor:pointer}
+.switch{display:flex;align-items:center;gap:9px;cursor:pointer}
+.switch input{appearance:none;width:34px;height:18px;background:var(--ink-3);border:1px solid var(--line);position:relative;cursor:pointer;transition:border-color .16s}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;background:var(--text-3);transition:transform .16s,background .16s}
+.switch input:checked{border-color:var(--amber-d)}
+.switch input:checked::after{transform:translateX(16px);background:var(--amber)}
+
+.out-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line-soft)}
+.out-row:last-of-type{border-bottom:none}
+.out-row .k{font-size:12px;color:var(--text-2)}
+.out-row .v{font-family:var(--mono);font-size:14px;color:var(--text)}
+.out-row .v.big{font-size:19px;color:var(--amber)}
+
+/* ---------- generator ---------- */
+.gen{display:grid;grid-template-columns:300px 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.gen-opts{background:var(--ink-1);padding:20px 22px}
+.gen-out{background:var(--ink-0);padding:20px 22px;display:flex;flex-direction:column;min-width:0}
+.code-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.code-head span{font-family:var(--mono);font-size:10.5px;color:var(--text-3);letter-spacing:.06em}
+.copy{
+  background:transparent;border:1px solid var(--line);color:var(--text-2);
+  font-family:var(--mono);font-size:10.5px;padding:5px 12px;cursor:pointer;letter-spacing:.04em;
+  transition:border-color .16s,color .16s;
+}
+.copy:hover{border-color:var(--amber-d);color:var(--amber)}
+pre{
+  flex:1;font-family:var(--mono);font-size:11.5px;line-height:1.75;
+  color:var(--text-2);overflow:auto;white-space:pre;tab-size:2;
+  border-left:1px solid var(--line);padding-left:16px;
+}
+pre .c{color:var(--text-3)}
+pre .k{color:var(--amber)}
+pre .f{color:#8FA6B8}
+
+/* ---------- checklist ---------- */
+.pit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.pit-col{background:var(--ink-1);padding:18px 20px}
+.pit-col h4{
+  font-size:11px;letter-spacing:.09em;font-family:var(--mono);
+  color:var(--text-3);margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.pit-col h4 em{font-style:normal;font-size:9.5px;padding:1px 6px;border:1px solid var(--line);color:var(--text-3)}
+.pit-col h4 em.p0{color:var(--danger);border-color:#4A2E28}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer;font-size:12.5px;color:var(--text-2);line-height:1.5}
+.chk input{appearance:none;flex:0 0 13px;width:13px;height:13px;margin-top:3px;border:1px solid var(--line);background:var(--ink-0);cursor:pointer;position:relative;transition:border-color .14s}
+.chk input:checked{border-color:var(--amber-d)}
+.chk input:checked::after{content:"";position:absolute;left:3px;top:0px;width:5px;height:9px;border-right:1px solid var(--amber);border-bottom:1px solid var(--amber);transform:rotate(42deg)}
+.chk input:checked+span{color:var(--text-3);text-decoration:line-through;text-decoration-color:var(--line)}
+.chk em{font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--text-3);display:block;margin-top:2px}
+
+/* ---------- runs table ---------- */
+.runs{width:100%;border-collapse:collapse;border:1px solid var(--line)}
+.runs th{
+  text-align:left;font-size:10.5px;font-weight:500;letter-spacing:.08em;
+  color:var(--text-3);padding:10px 14px;border-bottom:1px solid var(--line);
+  background:var(--ink-1);white-space:nowrap;font-family:var(--mono);
+}
+.runs td{padding:12px 14px;border-bottom:1px solid var(--line-soft);font-size:12.5px;color:var(--text-2);vertical-align:top}
+.runs tr:last-child td{border-bottom:none}
+.runs td.mono{font-family:var(--mono);font-size:12px;color:var(--text)}
+.runs .tag{
+  display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 7px;
+  border:1px solid var(--line);color:var(--text-3);letter-spacing:.04em;
+}
+.runs .tag.stop{color:var(--danger);border-color:#4A2E28}
+.runs .tag.live{color:var(--amber);border-color:var(--amber-d)}
+.runs .tag.plan{color:var(--text-3)}
+.runs td .sub2{display:block;font-size:11px;color:var(--text-3);margin-top:3px}
+
+.foot{
+  margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:11px;color:var(--text-3);font-family:var(--mono);letter-spacing:.02em;
+}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:20px}
+  .calc,.gen{grid-template-columns:1fr}
+  .pit-grid{grid-template-columns:1fr}
+  .masthead{flex-direction:column;align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="masthead">
+    <div class="brand">
+      <div class="brand-mark">SC</div>
+      <div>
+        <h1>训练编排台</h1>
+        <p class="sub">sunny-cx 0.5B · 524,133,504 params · GTX 1060 6GB · sm_61</p>
+      </div>
+    </div>
+    <div class="state"><span class="dot"></span><span id="stateText">v2 已中断 · 待重启</span></div>
+  </header>
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="hero-l">
+      <div class="gauge-head">
+        <h3>显存分配 · 按当前参数实算</h3>
+        <span class="unit">总容量 6.00 GB</span>
+      </div>
+      <div class="gauge">
+        <div class="limit" style="left:91.67%"><span>5.5 GB 硬上限</span></div>
+        <div class="gauge-track" id="vramBar">
+          <div class="seg seg-w" id="segW"></div>
+          <div class="seg seg-g" id="segG"></div>
+          <div class="seg seg-a" id="segA"></div>
+          <div class="seg seg-act" id="segAct"></div>
+          <div class="seg seg-free"></div>
+        </div>
+        <div class="gauge-ticks" id="ticks"></div>
+      </div>
+      <div class="legend">
+        <span class="lg"><i style="background:#3A3A40"></i>fp16 权重 <b id="lgW">0.98</b></span>
+        <span class="lg"><i style="background:#31313A"></i>梯度 <b id="lgG">0.98</b></span>
+        <span class="lg"><i style="background:#2A2A32"></i>8bit Adam <b id="lgA">0.98</b></span>
+        <span class="lg"><i style="background:#22252E"></i>激活 <b id="lgAct">0.28</b></span>
+        <span class="lg"><i style="background:repeating-linear-gradient(135deg,transparent 0 3px,#2A2A2F 3px 4px)"></i>余量 <b id="lgFree">2.78</b></span>
+      </div>
+      <p class="gauge-cap" id="capText">实测锚点：pad 512 → 峰值 3.22 GB；pad 96 → 峰值 3.16 GB。余量 2.7 GB 不是浪费——Windows 桌面合成与显存碎片化要求至少留 2.5 GB，压到 5.5 GB 必 OOM。</p>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><span class="k">OPTIMIZER STEP</span><span class="v" id="mSteps">13,212</span></div>
+      <div class="metric"><span class="k">纯训练</span><span class="v" id="mTrain">60.6 h</span></div>
+      <div class="metric"><span class="k">含验证 + 休息</span><span class="v accent" id="mTotal">80.6 h</span></div>
+      <div class="metric"><span class="k">折合</span><span class="v" id="mDays">3.36 天</span></div>
+    </div>
+  </section>
+
+  <!-- ================= CALCULATOR ================= -->
+  <section>
+    <div class="sec-head">
+      <span class="idx">01</span><h2>预算计算器</h2>
+      <span class="note">默认值来自真机实测；bat 注释里的 16.5 s/step 是乐观估计，实际 17.4~17.6</span>
+    </div>
+    <div class="calc">
+      <div class="calc-pane">
+        <div class="tabs">
+          <button class="tab on" data-stage="pretrain">预训练</button>
+          <button class="tab" data-stage="sft">SFT</button>
+        </div>
+        <div class="pane-title">输入</div>
+        <div class="field">
+          <label>语料规模<span class="hint" id="hCorpus">亿 token</span></label>
+          <input type="number" id="inCorpus" value="1.0824" step="0.0001" min="0.0001">
+        </div>
+        <div class="field">
+          <label>max_seq_len</label>
+          <input type="number" id="inSeq" value="512" step="64" min="64">
+        </div>
+        <div class="field">
+          <label>batch_size</label>
+          <input type="number" id="inBatch" value="2" step="1" min="1">
+        </div>
+        <div class="field">
+          <label>accumulation_steps</label>
+          <input type="number" id="inAccum" value="8" step="1" min="1">
+        </div>
+        <div class="field">
+          <label>实测 s/step<span class="hint" id="hSpeed">真机口径，勿用 bench 数字</span></label>
+          <input type="number" id="inSpeed" value="17.4" step="0.1" min="0.1">
+        </div>
+        <div class="field">
+          <label>val_interval<span class="hint">每 N step 验证一次</span></label>
+          <input type="number" id="inValInt" value="400" step="10" min="10">
+        </div>
+        <div class="field">
+          <label>单次验证耗时<span class="hint">秒</span></label>
+          <input type="number" id="inValSec" value="425" step="5" min="1">
+        </div>
+        <div class="field">
+          <label>节律休息 2h / 30min</label>
+          <label class="switch"><input type="checkbox" id="inRest" checked></label>
+        </div>
+      </div>
+
+      <div class="calc-pane">
+        <div class="pane-title">输出</div>
+        <div class="out-row"><span class="k">每步 token</span><span class="v" id="oTokStep">8,192</span></div>
+        <div class="out-row"><span class="k">总 optimizer step</span><span class="v" id="oSteps">13,212</span></div>
+        <div class="out-row"><span class="k">纯训练</span><span class="v" id="oTrain">60.6 h</span></div>
+        <div class="out-row"><span class="k">验证（<span id="oValN">33</span> 次）</span><span class="v" id="oVal">3.9 h</span></div>
+        <div class="out-row"><span class="k">休息</span><span class="v" id="oRest">16.1 h</span></div>
+        <div class="out-row"><span class="k">总时长</span><span class="v big" id="oTotal">80.6 h</span></div>
+        <div class="out-row"><span class="k">折合天数</span><span class="v big" id="oDays">3.36 天</span></div>
+        <div class="out-row"><span class="k">存盘次数<span class="hint">按 save_interval 100 折算</span></span><span class="v" id="oSave">132</span></div>
+        <div class="out-row"><span class="k">语料覆盖</span><span class="v" id="oCover">1.00 轮</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GENERATOR ================= -->
+  <section>
+    <div class="sec-head">
+      <span class="idx">02</span><h2>配置生成器</h2>
+      <span class="note">生成的是可直接粘进 bat 的 cmd 命令，参数与 scripts/train.py 对齐</span>
+    </div>
+    <div class="gen">
+      <div class="gen-opts">
+        <div class="pane-title">选项</div>
+        <div class="field">
+          <label>阶段</label>
+          <select id="gStage">
+            <option value="pretrain">pretrain 预训练</option>
+            <option value="sft">sft 指令微调</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>初始权重<span class="hint" id="hInit">换语料重训必须走 from_weight</span></label>
+          <select id="gInit">
+            <option value="warm">from_weight 热启动</option>
+            <option value="resume">from_resume 断点续训</option>
+            <option value="scratch">从头开始</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>学习率</label>
+          <input type="number" id="gLr" value="0.0002" step="0.00001" min="0.000001">
+        </div>
+        <div class="field">
+          <label>epochs</label>
+          <input type="number" id="gEpochs" value="1" step="1" min="1">
+        </div>
+        <div class="field">
+          <label>val_samples</label>
+          <input type="number" id="gValS" value="400" step="50" min="20">
+        </div>
+        <div class="field">
+          <label>patience</label>
+          <input type="number" id="gPat" value="20" step="1" min="1">
+        </div>
+        <div class="field">
+          <label>sft 长度分桶</label>
+          <select id="gBucket">
+            <option value="on">开（3.92× 墙钟）</option>
+            <option value="off">关（固定 pad 512）</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="gen-out">
+        <div class="code-head">
+          <span id="codeLabel">COMMAND · cmd</span>
+          <button class="copy" id="btnCopy">复制</button>
+        </div>
+        <pre id="codeOut"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PITFALLS ================= -->
+  <section>
+    <div class="sec-head">
+      <span class="idx">03</span><h2>启动前自查</h2>
+      <span class="note">打勾状态保存在本机浏览器，换设备需重勾</span>
+    </div>
+    <div class="pit-grid" id="pitGrid"></div>
+  </section>
+
+  <!-- ================= RUNS ================= -->
+  <section>
+    <div class="sec-head">
+      <span class="idx">04</span><h2>运行档案</h2>
+      <span class="note">只收录真实跑过的运行，计划中的单列标注</span>
+    </div>
+    <table class="runs">
+      <thead>
+        <tr><th>运行</th><th>状态</th><th>规模</th><th>实测速度</th><th>显存峰值</th><th>结果</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono">pretrain_v1</td>
+          <td><span class="tag stop">早停 · 误触发</span></td>
+          <td>5,600 / 23,892 step<span class="sub2">0.945 亿 token · 单轮 46.9%</span></td>
+          <td class="mono">17.4 s/step</td>
+          <td class="mono">3.19 GB</td>
+          <td>val 3.8995 @4600<span class="sub2">大样本复测：5600 更优（ppl 31.21 vs 34.02），4600 之后 1000 步白跑</span></td>
+        </tr>
+        <tr>
+          <td class="mono">pretrain_v2</td>
+          <td><span class="tag stop">已中断</span></td>
+          <td>计划 13,212 step<span class="sub2">1.0824 亿 token · 完整 1 轮</span></td>
+          <td class="mono">17.4 s/step<span class="sub2">step 20 → 5.8min；step 280 → 82.3min，均为 17.4~17.6</span></td>
+          <td class="mono">3.22 GB</td>
+          <td>15:09 热启动，产至 step 280 后被清理<span class="sub2">需双击 start_training_v2.bat 重启，自动转 resume</span></td>
+        </tr>
+        <tr>
+          <td class="mono">sft_v2</td>
+          <td><span class="tag plan">未开始</span></td>
+          <td>67,596 step<span class="sub2">1,081,549 样本 ÷ 16</span></td>
+          <td class="mono">4.01 s/step<span class="sub2">分桶后；固定 pad 为 15.73</span></td>
+          <td class="mono">3.16 GB</td>
+          <td>预计 3.14 天<span class="sub2">前提：预训练 v2 跑完 1 轮</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="foot">
+    <span>数据源：本工程训练日志与探针脚本</span>
+    <span>所有数字均可回溯至具体 step 与脚本，未经实测者标记「未验证」</span>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ---------- 常量：全部来自真机实测 ---------- */
+const PARAMS = 524133504;
+const GB = 1024 * 1024 * 1024;
+const W_WEIGHT = PARAMS * 2 / GB;        // fp16 权重
+const W_GRAD   = PARAMS * 2 / GB;        // fp16 梯度
+const W_ADAM   = PARAMS * 2 / GB;        // 8bit Adam 两个状态
+const TOTAL_VRAM = 6.0;
+
+const STAGE = {
+  pretrain: {
+    corpus: 1.0824, seq: 512, batch: 2, accum: 8, speed: 17.4,
+    valInt: 400, valSec: 425, saveInt: 100,
+    corpusLabel: "亿 token", speedHint: "真机口径，勿用 bench 数字",
+    init: "warm", lr: 0.0002, valSamples: 400, patience: 20
+  },
+  sft: {
+    corpus: 108.1549, seq: 512, batch: 2, accum: 8, speed: 4.01,
+    valInt: 2000, valSec: 200, saveInt: 500,
+    corpusLabel: "万样本（÷16 = step）", speedHint: "分桶 4.01；固定 pad 15.73",
+    init: "warm", lr: 0.0001, valSamples: 200, patience: 3
+  }
+};
+
+let stage = "pretrain";
+
+const $ = id => document.getElementById(id);
+const fmt = (n, d = 0) => n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+
+/* ---------- 显存刻度 ---------- */
+function buildTicks() {
+  const box = $("ticks");
+  box.innerHTML = "";
+  for (let g = 0; g <= 6; g += 0.5) {
+    const whole = Math.abs(g - Math.round(g)) < 1e-9;
+    const d = document.createElement("div");
+    d.className = "tick" + (whole ? "" : " half");
+    d.style.left = (g / 6 * 100) + "%";
+    d.innerHTML = whole
+      ? '<i></i><span>' + g.toFixed(0) + "</span>"
+      : '<i></i>';
+    box.appendChild(d);
+  }
+}
+
+/* ---------- 核心计算 ---------- */
+function compute() {
+  const corpus = parseFloat($("inCorpus").value) || 0;
+  const seq    = parseInt($("inSeq").value, 10) || 512;
+  const batch  = parseInt($("inBatch").value, 10) || 1;
+  const accum  = parseInt($("inAccum").value, 10) || 1;
+  const speed  = parseFloat($("inSpeed").value) || 1;
+  const valInt = parseInt($("inValInt").value, 10) || 100;
+  const valSec = parseFloat($("inValSec").value) || 0;
+  const restOn = $("inRest").checked;
+
+  const tokStep = batch * seq * accum;
+  let steps;
+  if (stage === "pretrain") {
+    steps = Math.floor(corpus * 1e8 / tokStep);
+  } else {
+    /* SFT：corpus 单位是「万样本」，每 step 消耗 batch × accum 条 */
+    steps = Math.floor(corpus * 1e4 / (batch * accum));
+  }
+
+  const trainH = steps * speed / 3600;
+  const valN   = Math.max(0, Math.floor(steps / valInt));
+  const valH   = valN * valSec / 3600;
+  const coreH  = trainH + valH;
+  const restH  = restOn ? coreH * (30 / 120) : 0;
+  const totalH = coreH + restH;
+
+  /* 显存：激活随 pad 长度变化，用两个实测锚点线性插值 */
+  const padLen = stage === "sft" ? Math.min(seq, 96) : seq;
+  const act = 0.15 + 0.13 * (padLen / 512);
+  const used = W_WEIGHT + W_GRAD + W_ADAM + act;
+  const free = Math.max(0, TOTAL_VRAM - used);
+
+  /* ---- hero ---- */
+  $("mSteps").textContent = fmt(steps);
+  $("mTrain").textContent = trainH.toFixed(1) + " h";
+  $("mTotal").textContent = totalH.toFixed(1) + " h";
+  $("mDays").textContent  = (totalH / 24).toFixed(2) + " 天";
+
+  const pct = v => (v / TOTAL_VRAM * 100).toFixed(2) + "%";
+  $("segW").style.width   = pct(W_WEIGHT);
+  $("segG").style.width   = pct(W_GRAD);
+  $("segA").style.width   = pct(W_ADAM);
+  $("segAct").style.width = pct(act);
+
+  $("lgW").textContent   = W_WEIGHT.toFixed(2);
+  $("lgG").textContent   = W_GRAD.toFixed(2);
+  $("lgA").textContent   = W_ADAM.toFixed(2);
+  $("lgAct").textContent = act.toFixed(2);
+  $("lgFree").textContent = free.toFixed(2);
+
+  $("capText").innerHTML = "本方案峰值 <b style='color:#E7E4DE'>" + used.toFixed(2) +
+    " / 6.00 GB</b>，余量 " + free.toFixed(2) +
+    " GB。余量不是浪费——Windows 桌面合成与显存碎片化要求至少留 2.5 GB，压到 5.5 GB 必 OOM。" +
+    (stage === "sft" ? " SFT 走长度分桶后平均 pad 约 96，激活随之下降。" : "");
+
+  /* ---- 输出 ---- */
+  $("oTokStep").textContent = fmt(tokStep);
+  $("oSteps").textContent   = fmt(steps);
+  $("oTrain").textContent   = trainH.toFixed(1) + " h";
+  $("oValN").textContent    = fmt(valN);
+  $("oVal").textContent     = valH.toFixed(1) + " h";
+  $("oRest").textContent    = restOn ? restH.toFixed(1) + " h" : "关闭";
+  $("oTotal").textContent   = totalH.toFixed(1) + " h";
+  $("oDays").textContent    = (totalH / 24).toFixed(2) + " 天";
+
+  const saveInt = STAGE[stage].saveInt;
+  $("oSave").textContent = fmt(Math.floor(steps / saveInt));
+  $("oCover").textContent = stage === "pretrain" ? "1.00 轮" : "1.00 遍";
+}
+
+/* ---------- 阶段切换 ---------- */
+function applyStage(s) {
+  stage = s;
+  const c = STAGE[s];
+  $("inCorpus").value = c.corpus;
+  $("inSeq").value    = c.seq;
+  $("inBatch").value  = c.batch;
+  $("inAccum").value  = c.accum;
+  $("inSpeed").value  = c.speed;
+  $("inValInt").value = c.valInt;
+  $("inValSec").value = c.valSec;
+  $("hCorpus").textContent = c.corpusLabel;
+  $("hSpeed").textContent  = c.speedHint;
+  $("gLr").value       = c.lr;
+  $("gValS").value     = c.valSamples;
+  $("gPat").value      = c.patience;
+  $("gStage").value    = s;
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.stage === s));
+  compute();
+  renderCode();
+}
+
+/* ---------- 命令生成 ---------- */
+function renderCode() {
+  const s = stage;
+  const init = $("gInit").value;
+  const lr = parseFloat($("gLr").value) || 0.0002;
+  const epochs = parseInt($("gEpochs").value, 10) || 1;
+  const valS = parseInt($("gValS").value, 10) || 400;
+  const pat = parseInt($("gPat").value, 10) || 20;
+  const bucket = $("gBucket").value === "on";
+  const seq = parseInt($("inSeq").value, 10) || 512;
+  const batch = parseInt($("inBatch").value, 10) || 2;
+  const accum = parseInt($("inAccum").value, 10) || 8;
+
+  const isPre = s === "pretrain";
+  const dataDir = "..\\tcm-llm\\data\\processed_v2";
+  const trainF = isPre ? "tcm_classics_pretrain.train.jsonl" : "tcm_classics_qa.train.jsonl";
+  const valF   = isPre ? "tcm_classics_pretrain.val.jsonl"   : "tcm_classics_qa.val.jsonl";
+  const saveW  = isPre ? "sunnycx_0.5b_pretrain_v2" : "sunnycx_0.5b_sft_v2";
+
+  let initLine;
+  if (init === "resume") {
+    initLine = "  --from_resume";
+  } else if (init === "warm") {
+    initLine = "  --from_weight " + (isPre
+      ? "checkpoints\\sunnycx_0.5b_pretrain_warm5600.pth"
+      : "checkpoints\\sunnycx_0.5b_pretrain_v2_best.pth");
+  } else {
+    initLine = "  REM 从头开始：不传任何初始权重参数";
+  }
+
+  const lines = [
+    "<span class='c'>REM ---- 由训练编排台生成 · " + new Date().toLocaleDateString("zh-CN") + " ----</span>",
+    "<span class='c'>REM 峰值显存 " + (W_WEIGHT + W_GRAD + W_ADAM + (isPre ? 0.28 : 0.17)).toFixed(2) + " GB · 口径来自真机实测</span>",
+    "set PY=python",
+    "",
+    "\"%PY%\" <span class='f'>-u</span> scripts\\train.py ^",
+    "  <span class='k'>--stage</span> " + s + " ^",
+    "  <span class='k'>--config</span> 0.5b ^",
+    "  <span class='k'>--data_path</span> \"" + dataDir + "\\" + trainF + "\" ^",
+    "  <span class='k'>--val_data_path</span> \"" + dataDir + "\\" + valF + "\" ^",
+    initLine + " ^",
+    "  <span class='k'>--save_weight</span> " + saveW + " ^",
+    "  <span class='k'>--batch_size</span> " + batch + " ^",
+    "  <span class='k'>--max_seq_len</span> " + seq + " ^",
+    "  <span class='k'>--accumulation_steps</span> " + accum + " ^",
+    "  <span class='k'>--learning_rate</span> " + lr + " ^",
+    "  <span class='k'>--epochs</span> " + epochs + " ^",
+    "  <span class='k'>--val_interval</span> " + ($("inValInt").value) + " ^",
+    "  <span class='k'>--val_samples</span> " + valS + " ^",
+    "  <span class='k'>--early_stop_patience</span> " + pat + " ^",
+    "  <span class='k'>--save_interval</span> " + (isPre ? 100 : 500) + " ^",
+    "  <span class='k'>--log_interval</span> 20 ^",
+    "  <span class='k'>--warmup_steps</span> 200 ^",
+    (isPre ? "" : (bucket ? "  <span class='k'>--sft_bucket_chunk</span> 512 ^" : "  <span class='k'>--no_sft_bucket</span> ^")),
+    "  <span class='k'>--gradient_checkpointing</span> ^",
+    "  <span class='k'>--num_workers</span> 0 ^",
+    "  <span class='k'>--thermal_pause_c</span> 82 --thermal_resume_c 74 --thermal_hold_sec 20 ^",
+    "  <span class='k'>--rest_work_hours</span> 2 <span class='k'>--rest_minutes</span> 30"
+  ].filter(x => x !== "");
+
+  $("codeOut").innerHTML = lines.join("\n");
+  $("codeLabel").textContent = "COMMAND · " + (isPre ? "pretrain" : "sft") + " · cmd";
+}
+
+/* ---------- 自查清单 ---------- */
+const PITS = [
+  {
+    title: "显存与精度",
+    items: [
+      ["P0", "model.to(device, dtype=torch.float16)", "默认 fp32 → 权重 2.10 GiB + 梯度 4.2 GiB，首次 embedding 查表即 OOM。这是生死线，不是优化"],
+      ["P0", "梯度裁剪在 fp32 下算范数", "fp16 下 grad.pow(2) 在 |grad|>256 上溢 inf → 系数退化为 0 → 梯度静默清零，loss 卡住且无报错"],
+      ["P0", "未使用 GradScaler", "fp16 权重与 torch.GradScaler 不兼容（unscale 校验 dtype 会抛 ValueError）；用自写 StaticScaler，S=1024"],
+      ["P1", "RoPE 的 cos/sin 已按 q.dtype 转换", "fp32 表直接乘 fp16 的 q 会把整条注意力路径抬回 fp32"]
+    ]
+  },
+  {
+    title: "启动与进程",
+    items: [
+      ["P0", "换语料重训用了 --from_weight 而非 --from_resume", "resume 继承 step=5600，会跳过新语料前 43%，且 early_stop 的 bad_count=5 可能导致启动即停"],
+      ["P0", "在自己双击的控制台窗口里跑", "agent 沙箱会在会话结束时清理子进程。DETACHED_PROCESS / BREAKAWAY / nohup / WMI / schtasks 均已实测无效"],
+      ["P0", "bat 文件是 GBK + CRLF", "Edit/Write 直接改会变成 UTF-8 + LF，cmd.exe 解析乱码。改完必须按 gbk 重编码并校验 CRLF 数"],
+      ["P1", "已确认盘符剩余空间 ≥ 5.3 GB", "检查points 每个约 1 GB；注意 Windows 删除默认进回收站，曾占住 19.95 GB"]
+    ]
+  },
+  {
+    title: "数据与验证",
+    items: [
+      ["P0", "val_samples ≥ 200", "64 条验证集只从 2 本书抽样（59% 权重），导致 v1 在 step 4600 误触发早停；实测两个口径给出相反排序"],
+      ["P0", "验证集书级隔离，且不打包", "训练与验证必须同口径，否则 val_loss 不可比"],
+      ["P0", "重跑语料前确认 import opencc 可用", "笈成 1,254 本中 98.2% 是繁体，繁简不转会绕过全部简体关键词黑名单，过滤与去重同时失效"],
+      ["P1", "改过 .py 后已重启进程", "Python 在 import 时把模块编进内存，改磁盘文件对运行中进程无效。排查第一步：比对进程启动时间与源码修改时间"]
+    ]
+  }
+];
+
+function renderPits() {
+  const grid = $("pitGrid");
+  grid.innerHTML = "";
+  const saved = JSON.parse(localStorage.getItem("sc_pits") || "{}");
+  PITS.forEach((grp, gi) => {
+    const col = document.createElement("div");
+    col.className = "pit-col";
+    const h = document.createElement("h4");
+    h.innerHTML = grp.title + ' <em class="' + (gi === 0 ? "p0" : "") + '">' + grp.items.length + " 项</em>";
+    col.appendChild(h);
+    grp.items.forEach((it, ii) => {
+      const key = gi + "-" + ii;
+      const lab = document.createElement("label");
+      lab.className = "chk";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!saved[key];
+      cb.addEventListener("change", () => {
+        const cur = JSON.parse(localStorage.getItem("sc_pits") || "{}");
+        cur[key] = cb.checked;
+        localStorage.setItem("sc_pits", JSON.stringify(cur));
+      });
+      const sp = document.createElement("span");
+      sp.innerHTML = it[1] + "<em>" + it[0] + " · " + it[2] + "</em>";
+      lab.appendChild(cb);
+      lab.appendChild(sp);
+      col.appendChild(lab);
+    });
+    grid.appendChild(col);
+  });
+}
+
+/* ---------- 事件 ---------- */
+["inCorpus", "inSeq", "inBatch", "inAccum", "inSpeed", "inValInt", "inValSec", "inRest"]
+  .forEach(id => {
+    $(id).addEventListener("input", () => { compute(); });
+    $(id).addEventListener("change", () => { compute(); });
+  });
+
+["gStage", "gInit", "gLr", "gEpochs", "gValS", "gPat", "gBucket"]
+  .forEach(id => $(id).addEventListener("input", renderCode));
+["gStage", "gInit", "gBucket"].forEach(id => $(id).addEventListener("change", () => {
+  if (id === "gStage") { applyStage($("gStage").value); return; }
+  renderCode();
+}));
+
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => applyStage(t.dataset.stage));
+});
+
+$("btnCopy").addEventListener("click", async () => {
+  const txt = $("codeOut").innerText;
+  try {
+    await navigator.clipboard.writeText(txt);
+    $("btnCopy").textContent = "已复制";
+  } catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); document.body.removeChild(ta);
+    $("btnCopy").textContent = "已复制";
+  }
+  setTimeout(() => { $("btnCopy").textContent = "复制"; }, 1600);
+});
+
+/* ---------- init ---------- */
+buildTicks();
+renderPits();
+applyStage("pretrain");
+</script>
+</body>
+</html>
