@@ -615,6 +615,8 @@ class Resumer:
 
     def __init__(self, save_dir: str, save_weight: str):
         self.path = Path(save_dir) / f"{save_weight}_latest.pt"
+        # None=未尝试 / True=已恢复 / False=显存不足已跳过
+        self.optimizer_restored: Optional[bool] = None
 
     def exists(self) -> bool:
         return self.path.exists()
@@ -631,11 +633,38 @@ class Resumer:
         state = {k: (v.to(target_dtype) if v.is_floating_point() else v)
                  for k, v in state.items()}
         model.load_state_dict(state)
+        # state 与 ckpt["model"] 是两份等大的 CPU 副本；优化器状态搬运前先放掉，
+        # 避免与 bnb 的逐参数 cast 抢内存（CPU 侧也影响页表与 GC 抖动）。
+        del state
+        ckpt["model"] = None
         if optimizer is not None and ckpt.get("optimizer"):
+            # bnb 8-bit 优化器恢复 = 逐参数把状态张量搬上卡（几百次小额分配）。
+            # 6GB 卡上极易撞分配器碎片，表现为「还有 3.5GB 空闲却分配不出 2MB」。
+            # 先清缓存 + 触发 GC，把可复用的块还给分配器。
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            optimizer_restored = False
             try:
                 optimizer.load_state_dict(ckpt["optimizer"])
+                optimizer_restored = True
             except (ValueError, KeyError) as e:
                 print(f"[resume] 优化器状态恢复失败（可能换了优化器）：{e}")
+            except RuntimeError as e:
+                # bnb 8-bit 恢复会临时把 int8 状态升精度，峰值远超常驻的 0.98GiB。
+                # 6GB 卡上偶发 OOM（表现为「还有 3.5GB 空闲却分配不出 2MB」）。
+                # 这里只吞 OOM，别的 RuntimeError 照常抛。
+                if "out of memory" not in str(e).lower():
+                    raise
+                print("[resume] ⚠ 显存不足，无法恢复 8-bit 优化器状态 —— 已跳过")
+                print("        模型权重 / step / 早停状态均已恢复，训练可继续；")
+                print("        代价是 Adam 一阶二阶矩重置，接下来数百步 loss 会有一次小幅回升。")
+                print("        要避免此降级：先关闭占显存的程序再续训。")
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                gc.collect()
+            if optimizer is not None:
+                self.optimizer_restored = optimizer_restored
         if scaler is not None and ckpt.get("scaler") and scaler.is_enabled():
             try:
                 scaler.load_state_dict(ckpt["scaler"])
@@ -645,6 +674,7 @@ class Resumer:
             "epoch": ckpt.get("epoch", 0),
             "step": ckpt.get("step", 0),
             "early_stop": ckpt.get("early_stop", {}),
+            "optimizer_restored": self.optimizer_restored,
         }
 
 

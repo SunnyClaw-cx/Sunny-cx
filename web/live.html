@@ -59,6 +59,7 @@
             <span class="lg"><i class="lg-line"></i>train · ema</span>
             <span class="lg"><i class="lg-line lg-faint"></i>原始</span>
             <span class="lg"><i class="lg-dot"></i>val</span>
+            <span class="lg" id="lg-best" hidden><i class="lg-dash"></i><span id="lg-best-text">best</span></span>
           </div>
         </div>
         <svg id="curve" viewBox="0 0 720 250" preserveAspectRatio="none" role="img"
@@ -78,7 +79,7 @@
         <dt>grad norm</dt><dd id="m-gnorm">—</dd>
         <dt>峰值显存</dt><dd id="m-vram">—</dd>
         <dt>best val</dt><dd id="m-best">—</dd>
-        <dt>已训练</dt><dd id="m-elapsed">—</dd>
+        <dt>本次进程</dt><dd id="m-elapsed">—</dd>
         <dt>单步耗时</dt><dd id="m-sps">—</dd>
         <dt>预计剩余</dt><dd id="m-eta">—</dd>
         <dt>已休息</dt><dd id="m-rest">—</dd>

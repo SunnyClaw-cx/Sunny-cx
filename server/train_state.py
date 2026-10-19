@@ -158,49 +158,71 @@ def parse_run(run: str) -> dict:
     age = max(0.0, time.time() - log_path.stat().st_mtime)
     out["log_age_sec"] = round(age, 1)
 
+    # 启动脚本用 `> LOG` 覆盖写，每次重启主日志都会被清空。
+    # 把 `*_run*.log` / `*.run*.log` 这类归档按时间拼在前面，
+    # 曲线才能跨重启连续；主日志放最后，其状态事件优先。
+    segments = sorted(
+        (p for p in LOGS.glob(f"{log_path.stem}.run*.log") if p.is_file()),
+        key=lambda p: p.stat().st_mtime,
+    )
+    segments.append(log_path)
+    out["segments"] = [p.name for p in segments]
+
     resting = False
-    for line in _tail_lines(log_path):
-        m = RE_STEP.search(line)
-        if m:
-            epoch, epochs, step, total = (int(x) for x in m.groups()[:4])
-            out.update(
-                epoch=epoch, epochs=epochs, step=step, total_steps=total,
-                loss=float(m.group(5)), lr=float(m.group(6)),
-                gnorm=float(m.group(7)), elapsed_min=float(m.group(8)),
-                peak_gb=float(m.group(9)), peak_total_gb=float(m.group(10)),
-            )
-            if len(out["curve"]) < 2000:
-                out["curve"].append({"step": step, "loss": float(m.group(5))})
-            continue
+    for seg in segments:
+        for line in _tail_lines(seg):
+            m = RE_STEP.search(line)
+            if m:
+                epoch, epochs, step, total = (int(x) for x in m.groups()[:4])
+                out.update(
+                    epoch=epoch, epochs=epochs, step=step, total_steps=total,
+                    loss=float(m.group(5)), lr=float(m.group(6)),
+                    gnorm=float(m.group(7)), elapsed_min=float(m.group(8)),
+                    peak_gb=float(m.group(9)), peak_total_gb=float(m.group(10)),
+                )
+                if len(out["curve"]) < 2000:
+                    out["curve"].append({
+                        "step": step,
+                        "loss": float(m.group(5)),
+                        "elapsed": float(m.group(8)),
+                    })
+                continue
 
-        m = RE_VAL.search(line)
-        if m:
-            out["vals"].append({
-                "step": int(m.group(1)),
-                "train": float(m.group(3)),
-                "val": float(m.group(4)),
-                "gap": float(m.group(5)),
-                "best": float(m.group(6)),
-            })
-            continue
+            m = RE_VAL.search(line)
+            if m:
+                out["vals"].append({
+                    "step": int(m.group(1)),
+                    "train": float(m.group(3)),
+                    "val": float(m.group(4)),
+                    "gap": float(m.group(5)),
+                    "best": float(m.group(6)),
+                })
+                continue
 
-        if RE_REST_BEGIN.search(line):
-            resting, out["rest_timer"] = True, None
-            continue
+            if RE_REST_BEGIN.search(line):
+                resting, out["rest_timer"] = True, None
+                continue
 
-        m = RE_REST_TICK.search(line)
-        if m:
-            resting = True
-            out["rest_timer"] = [float(m.group(1)), float(m.group(2))]
-            continue
+            m = RE_REST_TICK.search(line)
+            if m:
+                resting = True
+                out["rest_timer"] = [float(m.group(1)), float(m.group(2))]
+                continue
 
-        if RE_REST_END.search(line):
-            resting, out["rest_timer"] = False, None
-            continue
+            if RE_REST_END.search(line):
+                resting, out["rest_timer"] = False, None
+                continue
 
-        m = RE_BEST.search(line)
-        if m:                                   # 兜底：从 best 行补 best_val
-            out["best_val"] = float(m.group(1))
+            m = RE_BEST.search(line)
+            if m:                               # 兜底：从 best 行补 best_val
+                out["best_val"] = float(m.group(1))
+
+    # 跨段去重：同一步以主日志（后读）为准
+    for key in ("curve", "vals"):
+        dedup: dict = {}
+        for item in out[key]:
+            dedup[item["step"]] = item
+        out[key] = [dedup[k] for k in sorted(dedup)]
 
     if resting:
         out["state"] = "resting"
@@ -212,12 +234,35 @@ def parse_run(run: str) -> dict:
     step, total, elapsed = out["step"], out["total_steps"], out["elapsed_min"]
     if step and total:
         out["progress"] = round(step / total, 5)
-        if elapsed and step > 0:
+        sps = _sec_per_step(out["curve"])
+        if sps:
+            out["sec_per_step"] = round(sps, 2)
             # elapsed 是墙钟时间（含休息），因此 ETA 天然把未来的休息算进去了
-            sec_per_step = elapsed * 60 / step
-            out["sec_per_step"] = round(sec_per_step, 2)
-            out["eta_hours"] = round((total - step) * sec_per_step / 3600, 2)
+            out["eta_hours"] = round((total - step) * sps / 3600, 2)
     return out
+
+
+def _sec_per_step(curve: list[dict]) -> float | None:
+    """单步耗时取相邻进度点的增量中位数。
+
+    不能用 `elapsed*60/step`：进程重启后 elapsed 从 0 重新计，
+    而 step 是累计值，两者相除会得到荒谬的小值（如 0.11 s/步），
+    ETA 随之严重低估。相邻点的 Δelapsed/Δstep 不受重启影响；
+    取中位数可避开休息段（Δelapsed 含 30min 休息）这类离群值。
+    """
+    ratios: list[float] = []
+    for a, b in zip(curve, curve[1:]):
+        ds = b["step"] - a["step"]
+        de = b.get("elapsed", 0.0) - a.get("elapsed", 0.0)
+        if ds > 0 and de > 0:
+            r = de * 60 / ds
+            if 0.5 <= r <= 600:          # 排除重启断点与异常行
+                ratios.append(r)
+    if not ratios:
+        return None
+    ratios.sort()
+    mid = len(ratios) // 2
+    return ratios[mid] if len(ratios) % 2 else (ratios[mid - 1] + ratios[mid]) / 2
 
 
 def latest_run() -> str | None:

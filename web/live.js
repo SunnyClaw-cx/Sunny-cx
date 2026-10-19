@@ -84,13 +84,15 @@
         '" text-anchor="end">' + v.toFixed(2) + "</text>");
     }
 
-    // best val 参考线
+    // best val 参考线（数值放到图例里，避免压在曲线上）
     if (d.best_val != null && d.best_val >= lo && d.best_val <= hi) {
       var by = sy(d.best_val);
       out.push('<line class="best" x1="' + L + '" y1="' + by.toFixed(1) +
         '" x2="' + (W - R) + '" y2="' + by.toFixed(1) + '"/>');
-      out.push('<text class="axis" x="' + (L + 6) + '" y="' + (by - 5).toFixed(1) +
-        '">best ' + d.best_val.toFixed(4) + "</text>");
+      $("lg-best").hidden = false;
+      $("lg-best-text").textContent = "best " + d.best_val.toFixed(4);
+    } else {
+      $("lg-best").hidden = true;
     }
 
     // 原始 loss（细线，保留真实抖动）

@@ -237,6 +237,7 @@ select {
 .lg-line { width: 14px; height: 1.5px; background: var(--ink); }
 .lg-faint { height: 1px; background: rgba(27, 26, 23, .28); }
 .lg-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--cinnabar); }
+.lg-dash { width: 14px; height: 0; border-top: 1px dashed var(--cinnabar); opacity: .55; }
 
 #curve {
   display: block;
